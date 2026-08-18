@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Peak?</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            max-width: 450px;
+            width: 100%;
+            transition: all 0.5s ease;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #38bdf8;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            min-height: 50px;
+            position: relative;
+        }
+
+        button {
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-yes {
+            background: #38bdf8;
+            color: #0f172a;
+            box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-yes:hover {
+            background: #0ea5e9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
+        }
+
+        .btn-no {
+            background: #ef4444;
+            color: white;
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Screen 2: Date/Time Picker */
+        .hidden {
+            display: none !important;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="datetime-local"]:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        /* Screen 3: Success */
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        .time-display {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px dashed #38bdf8;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: #38bdf8;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: THE ASK -->
+    <div id="screen1" class="card">
+        <h1>Play Peak? 🎮</h1>
+        <p>Are you down to hop on and play some Peak?</p>
+        <div class="btn-group">
+            <button class="btn-yes" onclick="goToScreen2()">Yes</button>
+            <button class="btn-no">No</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: THE SCHEDULER -->
+    <div id="screen2" class="card hidden">
+        <h1>Lock it in! 🗓️</h1>
+        <p>Awesome! Select a date and time to secure the session.</p>
+        
+        <div class="input-group">
+            <label for="gameTime">When are we playing?</label>
+            <input type="datetime-local" id="gameTime" required>
+        </div>
+
+        <button class="btn-yes" style="width: 100%;" onclick="submitTime()">Confirm Session</button>
+    </div>
+
+    <!-- SCREEN 3: THE CONFIRMATION -->
+    <div id="screen3" class="card hidden">
+        <div class="success-icon">🚀</div>
+        <h1>It's a Date!</h1>
+        <p>See you on the server. Get ready!</p>
+        <div id="finalTime" class="time-display"></div>
+    </div>
+
+    <script>
+        // Set minimum selectable date/time to right now
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('gameTime').min = now.toISOString().slice(0,16);
+
+        function goToScreen2() {
+            document.getElementById('screen1').classList.add('hidden');
+            document.getElementById('screen2').classList.remove('hidden');
+        }
+
+        function submitTime() {
+            const timeInput = document.getElementById('gameTime').value;
+            if (!timeInput) {
+                alert('Please pick a time first!');
+                return;
+            }
+
+            // Format the date beautifully
+            const dateObj = new Date(timeInput);
+            const formattedDate = dateObj.toLocaleString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            document.getElementById('screen2').classList.add('hidden');
+            document.getElementById('finalTime').innerText = formattedDate;
+            document.getElementById('screen3').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
